@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}上传文件{% endblock %}
+{% block content %}
+<div id="container">
+  <div class="row">
+    <div class="col-xs-8 col-xs-offset-2 col-lg-4 col-lg-offset-4" id="message">
+      <div class="alert alert-success alert-dismissible" role="alert" id="upload-successfully">
+        <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-8 col-xs-offset-2 col-lg-4 col-lg-offset-4">
+
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-8 col-xs-offset-2 col-lg-4 col-lg-offset-4">
+      <div class="panel panel-default">
+        <div class="panel-heading">已选择的文件</div>
+        <div class="panel-body">
+          <ul class="list-group" id="files-list"></ul>
+        </div>
+        <div class="panel-footer">
+          <a class="btn btn-sm btn-primary" id="pickfiles" style="width:160px" href="#" >
+            <i class="glyphicon glyphicon-plus"></i>
+            <span>选择文件</span>
+          </a>
+          <a class="btn btn-sm btn-danger " id="up_load" style="width:160px" href="#" >
+            <span>确认上传</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='qiniu.js') }}"></script>
+<script src="http://cdn.staticfile.org/Plupload/2.1.1/moxie.min.js"></script>
+<script src="http://cdn.staticfile.org/Plupload/2.1.1/plupload.min.js"></script>
+<script src="http://cdn.staticfile.org/plupload/2.1.9/i18n/zh_CN.js"></script>
+
+<script>
+  $('#message').hide();
+  var uploader = Qiniu.uploader({
+    runtimes: 'html5,flash,html4',      // 上传模式，依次退化
+    browse_button: 'pickfiles',         // 上传选择的点选按钮，必需
+    uptoken_url: '/upload_token',
+    get_new_uptoken: false,             // 设置上传文件的时候是否每次都重新获取新的uptoken
+    unique_names: false,
+    save_key: false,
+    domain: 'http://oev4zq3yk.bkt.clouddn.com',
+    max_retries: 1,                     // 上传失败最大重试次数
+    dragdrop: true,                     // 开启可拖曳上传
+    drop_element: 'container',          // 拖曳上传区域元素的ID，拖曳文件或文件夹后可触发上传
+    chunk_size: '4mb',                  // 分块上传时，每块的体积
+    auto_start: false,
+    filters: {
+      mime_types : [ //只允许上传图片
+        { title : "Image files", extensions : "jpg,jpeg,gif,png" },
+      ],
+      prevent_duplicates : false //不允许选取重复文件
+    },
+    init: {
+      'FilesAdded': function(up, files) {
+        plupload.each(files, function(file) {
+          $('#files-list').append('<li class="list-group-item"><span class="badge" id=' + file.name + '>0%</span>' + file.name + '</li>')
+        });
+      },
+      'BeforeUpload': function(up, file) {},
+      'UploadProgress': function(up, file) {
+        var id = file.name;
+        $('#' + file.name).html(file.percent + "%");
+      },
+      'FileUploaded': function(up, file, info) {
+        var res = JSON.parse(info);
+        $('#message').show();
+        $.ajax({
+          url: '/upload_feedback',
+          contentType: "application/json; charset=utf-8",
+          data: info,
+          timeout: 5000,
+          type: 'POST',
+          dataType: 'json',
+          success: function (data) {
+            $('#upload-successfully').append("<p>已成功上传文件：" + res.key + "</p>")
+          }
+        });
+      },
+      'Error': function(up, err, errTip) {},
+      'UploadComplete': function() {},
+      'Key': function(up, file) {
+        //当前时间戳
+        var name = file.name.split('.').reverse();
+        var key = new Date();
+        return key.getTime().toString() + '.' + name[0]
+      }
+    }
+  });  // 选择文件后自动上传，若关闭需要自己绑定事件触发上传
+  $('#up_load').click(function(e) {
+    uploader.start();
+    e.preventDefault();
+  });
+</script>
+{% endblock scripts %}
+
+{% block footer %}
+{{ super() }}
+{% endblock footer %}

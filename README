@@ -1,0 +1,37 @@
+## 相关文档
+ * [图床——基于七牛JS-SDK和KVDB](http://www.jianshu.com/p/7fa041f269ac)
+ * [Qiniu-JavaScript-SDK](https://github.com/qiniu/js-sdk)
+ * [Python SDK](http://developer.qiniu.com/code/v7/sdk/python.html)
+ * [七牛云帮助文档](http://developer.qiniu.com/article/index.html#fusion)
+
+## 基本结构
+
+* 七牛云存储服务：
+以键值对方式提供非结构化资源存储服务。向业务服务器提供资源管理服务，向客户端提供上传下载服务。
+* 业务服务器：
+    业务服务器需要开发者自己管理维护，提供以下功能：
+    - 生成安全凭证Token。为了确保安全，一定要在服务器端生成
+    - 使用关系型数据库（如MySQL）管理用户账号信息。七牛云存储服务只管理企业账号。
+    - 使用数据库管理资源元数据和资源之间的关联关系。
+    - 响应客户端的业务请求，执行业务流程并返回执行结果。
+
+* 客户端
+    资源的生产方和消费方。客户端在展示内容时，先从业务服务器获取资源的元信息，并得到下载凭证，使用下载凭证从云存储服务获取资源内容。
+
+---
+## 业务流程
+ * 上传
+
+ * 下载
+   公开资源下载不需要凭证。私有资源需要下载凭证，从业务服务器获取
+
+ * 资源管理操作
+   应该只在业务服务器端进行。
+
+## 密匙
+
+    QINIU_ACCESS_KEY = '七牛access-key'
+    QINIU_SECRET_KEY = 'secret-key'
+    
+    PIC_BUCKET = '七牛空间名'
+    PIC_DOMAIN = '七牛域名'
